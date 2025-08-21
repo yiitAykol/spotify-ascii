@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { randomBytes, createHash } from 'crypto';
 import { SPOTIFY_CLIENT_ID } from '$env/static/private';
-import { SPOTIFY_REDIRECT_URI } from '$env/static/private';
+import { SPOTIFY_REDIRECT_URI, SPOTIFY_CLIENT_SECRET, } from '$env/static/private';
 
 function base64url(buffer: Buffer) {
   return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -38,6 +38,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
     client_id: SPOTIFY_CLIENT_ID,
     response_type: 'code',
     redirect_uri: SPOTIFY_REDIRECT_URI,
+    client_secret: SPOTIFY_CLIENT_SECRET,
     code_challenge_method: 'S256',
     code_challenge: challenge,
     scope
