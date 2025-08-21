@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
       code,
       redirect_uri: SPOTIFY_REDIRECT_URI,
       client_id: SPOTIFY_CLIENT_ID,
-      client_secret: SPOTIFY_CLIENT_SECRET,
+      
       code_verifier: verifier
     });
 

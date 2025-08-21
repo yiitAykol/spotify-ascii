@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
     client_id: SPOTIFY_CLIENT_ID,
     response_type: 'code',
     redirect_uri: SPOTIFY_REDIRECT_URI,
-    client_secret: SPOTIFY_CLIENT_SECRET,
+    
     code_challenge_method: 'S256',
     code_challenge: challenge,
     scope
