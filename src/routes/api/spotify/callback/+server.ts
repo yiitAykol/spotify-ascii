@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 
 import { SPOTIFY_REDIRECT_URI } from '$env/static/private';
-import { SPOTIFY_CLIENT_ID } from '$env/static/private';
+import { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } from '$env/static/private';
 
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
@@ -26,6 +26,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
       code,
       redirect_uri: SPOTIFY_REDIRECT_URI,
       client_id: SPOTIFY_CLIENT_ID,
+      client_secret: SPOTIFY_CLIENT_SECRET,
       code_verifier: verifier
     });
 
