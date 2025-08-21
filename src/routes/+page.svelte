@@ -30,10 +30,26 @@
   let volumeTimer: number | null = null;
 
   // ——— Yardımcılar ———
+  /*
   async function getAccessToken(): Promise<string> {
     const r = await fetch('/api/spotify/token');
     if (!r.ok) throw new Error('Failed to get token');
     const j = await r.json();
+    return j.access_token;
+  }*/
+ // YENİ (401'de bir kez refresh dene + net hata mesajı):
+  async function getAccessToken(): Promise<string> {
+    let r = await fetch('/api/spotify/token');
+    if (r.status === 401) {
+      // session var ama access yoksa zorla yenile
+      r = await fetch('/api/spotify/token?refresh=1');
+    }
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      throw new Error(`Failed to get token (${r.status}) ${t}`);
+    }
+    const j = await r.json();
+    if (!j?.access_token) throw new Error('token endpoint returned no access_token');
     return j.access_token;
   }
 
@@ -152,6 +168,14 @@
           last = Date.now();
         }
       }, 250);
+      //yeni eklenen 
+      if (typeof window !== 'undefined') {
+        const u = new URL(window.location.href);
+        if (u.searchParams.has('spotify_auth')) {
+          u.searchParams.delete('spotify_auth');
+          history.replaceState({}, '', u.toString());
+        }
+      }//yeni eklenen bitti 
 
       // Çalma listelerini getir
       fetchUserPlaylists().catch(err => console.error('Failed to fetch playlists:', err));
@@ -206,7 +230,7 @@
       fetchCurrent();
     } catch (err) { console.error(err); }
   }
-
+  /*
   async function fetchUserPlaylists() {
     try {
       const token = await getAccessToken();
@@ -217,7 +241,40 @@
       const data = await res.json();
       playlists = (data.items ?? []).map((p: any) => ({ name: p.name, uri: p.uri }));
     } catch (err) { console.error(err); }
+  }*/
+  // ESKİ:
+// async function fetchUserPlaylists() { ... }
+
+// YENİ:
+async function fetchUserPlaylists() {
+  try {
+    const items: any[] = [];
+    let next: string | null = 'https://api.spotify.com/v1/me/playlists?limit=50';
+
+    while (next) {
+      const token = await getAccessToken();
+      const res: Response = await fetch(next, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.error('Playlists fetch error:', res.status, body);
+        // Spotify "insufficient_scope" veya "The access token expired" gibi net mesaj verir.
+        throw new Error(`Failed to fetch playlists (${res.status})`);
+      }
+
+      const data = await res.json();
+      items.push(...(data.items ?? []));
+      next = data.next; // sayfalama
+    }
+
+    playlists = items.map((p: any) => ({ name: p.name, uri: p.uri }));
+  } catch (err) {
+    console.error('fetchUserPlaylists failed:', err);
   }
+}
+
 
   async function seek(ms: number | string) {
     if (!player) return;
